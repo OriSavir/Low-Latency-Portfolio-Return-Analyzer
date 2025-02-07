@@ -1,0 +1,3 @@
+[submodule "dependencies/xlnt"]
+	path = dependencies/xlnt
+	url = https://github.com/tfussell/xlnt.git
