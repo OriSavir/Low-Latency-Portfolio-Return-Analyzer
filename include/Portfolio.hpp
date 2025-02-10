@@ -12,6 +12,7 @@ class Portfolio {
         double ctwr;
         double cwr;
         double irr;
+        int record_count;
     public:
         Portfolio(const std::string &filename);
 
@@ -22,7 +23,7 @@ class Portfolio {
         double computeTWR();
         double computeContinuousTWR();
         double computeCWR();
-        double computeIRR(double guess=0.1);
+        double computeIRR(double tolerance, int max_iterations, double guess);
         
         void print_results();
         void write_results(const std::string &filename);

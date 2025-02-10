@@ -1,7 +1,7 @@
 all:
-	mkdir -p build
-	cd build && cmake ..
-	cmake --build build
+	mkdir -p portfolio_analysis_build
+	cd portfolio_analysis_build && cmake ..
+	cd portfolio_analysis_build && cmake --build .
 
 clean:
-	rm -rf build
+	rm -rf portfolio_analysis_build

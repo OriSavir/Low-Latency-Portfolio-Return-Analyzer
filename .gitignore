@@ -3,3 +3,4 @@ build/
 out/
 CMakeCache.txt
 CMakeFiles/
+.cache

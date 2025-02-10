@@ -7,27 +7,30 @@
 
 Portfolio::Portfolio(const std::string &filename) {
     records = read_records(filename);
-
+    if (record_count == 0) {
+        std::cerr << "Error reading the file (the records vector was read empty)" << std::endl;
+    }
+    record_count = records.size();
     twr = computeTWR();
     ctwr = computeContinuousTWR();
     cwr = computeCWR();
-    irr = computeIRR();
+    irr = computeIRR(1e-5, 100, 0.1);
 }
 
 void Portfolio::computeReturnRates() {
-    for (int i = 1; i < int(records.size()); i++) {
+    for (int i = 1; i < int(record_count); i++) {
         records[i].return_rate = (records[i].value - (records[i-1].value + records[i-1].capital_flow)) / (records[i-1].value + records[i-1].capital_flow);
     }
 }
 
 double Portfolio::computeTWR() {
-    if (records.size() <= 1) {
+    if (record_count <= 1) {
         return 0;
     }
     Record initial_value = records[0];
-    double total_time = records[records.size()-1].time - initial_value.time;
+    double total_time = records[record_count-1].time - initial_value.time;
     double product_of_returns = 1.0;
-    for (int i = 1; i < int(records.size()); i++) {
+    for (int i = 1; i < int(record_count); i++) {
         product_of_returns *= 1 + records[i].return_rate;
     }
     twr = pow((product_of_returns),((1/total_time))) - 1;
@@ -35,7 +38,7 @@ double Portfolio::computeTWR() {
 }
 
 double Portfolio::computeContinuousTWR() {
-    if (records.size() <= 1) {
+    if (record_count <= 1) {
         return 0;
     }
     if (twr == 0) {
@@ -46,34 +49,57 @@ double Portfolio::computeContinuousTWR() {
 }
 
 double Portfolio::computeCWR() {
-    if (records.size() <= 1) {
+    if (record_count <= 1) {
         return 0;
     }
     Record initial_value = records[0];
-    double total_time = records[records.size()-1].time - initial_value.time;
+    Record final_value = records[record_count-1];
+    double total_time = final_value.time - initial_value.time;
     double sum_cap_flows = 0;
-    for (int i = 1; i < int(records.size()); i++) {
+    double sum_time_scaled_cap_flows = 0;
+    for (int i = 1; i < int(record_count); i++) {
         sum_cap_flows += records[i].capital_flow;
+        sum_time_scaled_cap_flows += records[i].capital_flow * ((final_value.time - records[i].time) / final_value.time);
     }
-
+    double r_cwr_t = (final_value.value - initial_value.value - sum_cap_flows) / (initial_value.value + sum_time_scaled_cap_flows);
+    cwr = pow(1 + r_cwr_t, 1 / total_time) - 1;
+    return cwr;
 }
 
-double Portfolio::computeIRR(double guess) {
-    if (records.size() <= 1) {
-        return 0;
-    }
-    double epsilon = 0.0001;
-    double difference = 1;
-    while (difference > epsilon) {
-        double sum = 0;
-        for (int i = 1; i < int(records.size()); i++) {
-            sum += records[i].capital_flow / pow(1 + guess, records[i].time - records[0].time);
+
+//Implementation of the Newton-Raphson method to compute the IRR (similar to gradient descent techniques)
+double Portfolio::computeIRR(double tolerance, int max_iterations, double guess) {
+    double R_I = guess;
+
+    for (int iter = 0; iter < max_iterations; iter++) {
+        double F_RI = records[0].value;
+        double F_prime_RI = 0;
+
+        for (size_t i = 1; i < record_count - 1; i++) {
+            Record rec = records[i];
+            if(rec.capital_flow != 0) {
+                double time_diff = rec.time - records[0].time;
+                double discount_factor = pow(1 + R_I, time_diff);
+                F_RI += rec.capital_flow / discount_factor;
+                F_prime_RI -= time_diff * rec.capital_flow / (discount_factor * (1 + R_I));
+            }
         }
-        difference = sum;
-        guess += epsilon;
+        
+        double time_diff = records[record_count - 1].time - records[0].time;
+        double last_discount_factor = pow(1 + R_I, time_diff);
+        F_RI -= records[record_count - 1].value / last_discount_factor;
+        F_prime_RI += (time_diff) * records[record_count - 1].value / (last_discount_factor * (1 + R_I));
+
+        double new_RI = R_I - F_RI / F_prime_RI;
+
+        if (fabs(new_RI - R_I) < tolerance) {
+            return new_RI;
+        }
+
+        R_I = new_RI;
     }
-    irr = guess;
-    return irr;
+    std::cerr << "The IRR could not be computed within max_iterations of " << max_iterations << std::endl;
+    return -1;
 }
 
 void Portfolio::print_results() {
