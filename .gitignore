@@ -4,3 +4,5 @@ out/
 CMakeCache.txt
 CMakeFiles/
 .cache
+portfolio_analysis_build
+portfolio_results.xlsx

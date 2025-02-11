@@ -2,6 +2,7 @@
 #include <math.h>
 #include <iostream>
 #include <xlnt/xlnt.hpp>
+#include <filesystem>
 
 
 
@@ -11,6 +12,7 @@ Portfolio::Portfolio(const std::string &filename) {
         std::cerr << "Error reading the file (the records vector was read empty)" << std::endl;
     }
     record_count = records.size();
+    computeReturnRates();
     twr = computeTWR();
     ctwr = computeContinuousTWR();
     cwr = computeCWR();
@@ -110,17 +112,27 @@ void Portfolio::print_results() {
 }
 
 void Portfolio::write_results(const std::string &filename) {
-    xlnt::workbook wb;
-    xlnt::worksheet ws = wb.active_sheet();
-    ws.cell("A1").value("Time-Weighted Rate of Return");
-    ws.cell("B1").value(twr);
-    ws.cell("A2").value("Continuous Time-Weighted Rate of Return");
-    ws.cell("B2").value(ctwr);
-    ws.cell("A3").value("Capital-Weighted Rate of Return");
-    ws.cell("B3").value(cwr);
-    ws.cell("A4").value("Internal Rate of Return");
-    ws.cell("B4").value(irr);
-    wb.save(filename);
+    std::filesystem::path filePath(filename);
+    
+    std::string sheetName = filePath.stem().string();
+
+    xlnt::workbook wbOut;
+    xlnt::worksheet wsOut = wbOut.active_sheet();
+    wsOut.title(sheetName);
+
+    wsOut.cell(xlnt::cell_reference(1,1)).value("Time-Weighted Rate of Return");
+    wsOut.cell(xlnt::cell_reference(2,1)).value(twr);
+
+    wsOut.cell(xlnt::cell_reference(1,2)).value("Continuous Time-Weighted Rate of Return");
+    wsOut.cell(xlnt::cell_reference(2,2)).value(ctwr);
+
+    wsOut.cell(xlnt::cell_reference(1,3)).value("Capital-Weighted Rate of Return");
+    wsOut.cell(xlnt::cell_reference(2,3)).value(cwr);
+
+    wsOut.cell(xlnt::cell_reference(1,4)).value("Internal Rate of Return");
+    wsOut.cell(xlnt::cell_reference(2,4)).value(irr);
+
+    wbOut.save(filename);
 }
 
 std::vector<Record> Portfolio::read_records(const std::string &filename) {
@@ -154,9 +166,4 @@ std::vector<Record> Portfolio::read_records(const std::string &filename) {
     }
     return records;
 }
-
-
-
-
-
 

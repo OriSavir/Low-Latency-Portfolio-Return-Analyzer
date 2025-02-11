@@ -9,6 +9,6 @@ int main(int argc, char *argv[]) {
     std::string filename(argv[1]);
     Portfolio portfolio(filename);
     portfolio.print_results();
-    portfolio.write_results("portfolio_results.csv");
+    portfolio.write_results("portfolio_results.xlsx");
     return 0;
 }
