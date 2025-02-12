@@ -5,8 +5,8 @@ A high-performance **portfolio performance calculator** that computes key financ
 ---
 
 ## 🚀 Features
-- Optimized calculation of portfolio TWR, CWR, IRR 
-- Efficient **Internal Rate of Return (IRR) computation** based on the **Newton-Raphson method** for root-finding
+- Optimized calculation of portfolio **Time Weighted Return, Capital Weighted Return, Internal Rate of Return**
+- Efficient IRR computation based on the **Newton-Raphson method** for root-finding
 - Supports **low-latency performance calculations**
 - Uses **C++17** and **CMake**
 - Utilizes **[xlnt](https://github.com/tfussell/xlnt)** for Excel file handling
